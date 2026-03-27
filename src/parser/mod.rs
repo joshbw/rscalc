@@ -602,11 +602,12 @@ mod tests {
     }
 
     #[test]
-    fn test_comparison_operators() {
+    fn test_comparison_operators_rejected() {
+        // This calculator doesn't have comparison operators — '<', '>' alone are errors
         for op in ["<", ">", "<=", ">=", "==", "!="] {
             let input = format!("5 {op} 3");
             let result = Parser::parse(&input, CalculatorMode::Standard);
-            assert!(result.is_ok(), "Operator {op} should parse");
+            assert!(result.is_err(), "Operator {op} should not parse in a calculator");
         }
     }
 

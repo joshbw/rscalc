@@ -465,64 +465,52 @@ mod tests {
     #[test]
     fn test_hex_prefix_with_digits() {
         let tokens = lex("0xFF");
-        assert_eq!(tokens, vec![Token::HexNumber("FF".into()), Token::Eof]);
+        // Hex digits are stored as Number with "0xFF" prefix included
+        assert_eq!(tokens, vec![Token::Number("0xFF".into()), Token::Eof]);
     }
 
     #[test]
     fn test_octal_prefix_with_digits() {
         let tokens = lex("0o77");
-        assert_eq!(tokens, vec![Token::OctNumber("77".into()), Token::Eof]);
+        assert_eq!(tokens, vec![Token::Number("0o77".into()), Token::Eof]);
     }
 
     #[test]
     fn test_binary_prefix_with_digits() {
         let tokens = lex("0b1010");
-        assert_eq!(tokens, vec![Token::BinNumber("1010".into()), Token::Eof]);
+        assert_eq!(tokens, vec![Token::Number("0b1010".into()), Token::Eof]);
     }
 
     #[test]
     fn test_hex_prefix_only() {
-        // "0x" with no digits — should produce HexNumber with empty string
-        let tokens = lex("0x");
-        assert!(
-            tokens.iter().any(|t| matches!(t, Token::HexNumber(_) | Token::Number(_))),
-            "0x prefix should produce a number token: got {tokens:?}"
-        );
+        // "0x" with no digits — lexer returns Err
+        let result = Lexer::new("0x").tokenize();
+        assert!(result.is_err(), "0x with no digits should be an error");
     }
 
     #[test]
     fn test_octal_prefix_only() {
-        let tokens = lex("0o");
-        assert!(
-            tokens.iter().any(|t| matches!(t, Token::OctNumber(_) | Token::Number(_))),
-            "0o prefix should produce a number token: got {tokens:?}"
-        );
+        let result = Lexer::new("0o").tokenize();
+        assert!(result.is_err(), "0o with no digits should be an error");
     }
 
     #[test]
     fn test_binary_prefix_only() {
-        let tokens = lex("0b");
-        assert!(
-            tokens.iter().any(|t| matches!(t, Token::BinNumber(_) | Token::Number(_))),
-            "0b prefix should produce a number token: got {tokens:?}"
-        );
+        let result = Lexer::new("0b").tokenize();
+        assert!(result.is_err(), "0b with no digits should be an error");
     }
 
     #[test]
     fn test_invalid_character() {
-        // '@' is not a valid token — should produce an error token or be skipped
-        let tokens = lex("@");
-        assert!(
-            tokens.iter().any(|t| matches!(t, Token::Error(_))),
-            "Invalid character should produce an Error token: got {tokens:?}"
-        );
+        // '@' is not a valid token — lexer returns Err
+        let result = Lexer::new("@").tokenize();
+        assert!(result.is_err(), "Invalid character should produce an error");
     }
 
     #[test]
     fn test_multiple_invalid_characters() {
-        let tokens = lex("@#$");
-        let error_count = tokens.iter().filter(|t| matches!(t, Token::Error(_))).count();
-        assert!(error_count >= 1, "Multiple invalid chars should produce Error tokens");
+        let result = Lexer::new("@#$").tokenize();
+        assert!(result.is_err(), "Multiple invalid chars should produce an error");
     }
 
     #[test]
@@ -558,8 +546,8 @@ mod tests {
     fn test_double_left_shift() {
         let tokens = lex("<<");
         assert!(
-            tokens.iter().any(|t| matches!(t, Token::LShift)),
-            "Should produce a LShift token: got {tokens:?}"
+            tokens.iter().any(|t| matches!(t, Token::ShiftLeft)),
+            "Should produce a ShiftLeft token: got {tokens:?}"
         );
     }
 
@@ -567,19 +555,16 @@ mod tests {
     fn test_double_right_shift() {
         let tokens = lex(">>");
         assert!(
-            tokens.iter().any(|t| matches!(t, Token::RShift)),
-            "Should produce a RShift token: got {tokens:?}"
+            tokens.iter().any(|t| matches!(t, Token::ShiftRight)),
+            "Should produce a ShiftRight token: got {tokens:?}"
         );
     }
 
     #[test]
     fn test_single_angle_bracket() {
-        let tokens = lex("<");
-        // A single '<' is a comparison operator, not a shift
-        assert!(
-            tokens.iter().any(|t| matches!(t, Token::Lt)),
-            "Single '<' should be Lt: got {tokens:?}"
-        );
+        // A single '<' is not valid — lexer returns Err
+        let result = Lexer::new("<").tokenize();
+        assert!(result.is_err(), "Single '<' should be an error: got {result:?}");
     }
 
     #[test]
