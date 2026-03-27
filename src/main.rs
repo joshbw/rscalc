@@ -34,7 +34,7 @@ struct Cli {
     precision: Option<i32>,
 
     /// Evaluate expression and exit (alternative to positional)
-    #[arg(short, long, value_name = "EXPR")]
+    #[arg(short, long, value_name = "EXPR", allow_hyphen_values = true)]
     expr: Option<String>,
 }
 
