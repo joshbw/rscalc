@@ -43,7 +43,19 @@ impl Parser {
         let mut parser = Parser::new(tokens, mode);
         let expr = parser.parse_expr(0)?;
         if !parser.current().is_eof() {
-            return Err(format!("Unexpected token: {}", parser.current()));
+            let tok = parser.current();
+            // A leftover Number starting with '.' likely means the shell ate
+            // a '^' character (CMD uses ^ as its escape character).
+            if let Token::Number(s) = tok {
+                if s.starts_with('.') {
+                    return Err(format!(
+                        "Unexpected token: {tok}\n\
+                         Hint: your shell may have consumed a '^' operator. \
+                         Try quoting the expression, e.g.: rscalc -e \"...\"",
+                    ));
+                }
+            }
+            return Err(format!("Unexpected token: {tok}"));
         }
         Ok(expr)
     }
