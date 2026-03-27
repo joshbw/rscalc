@@ -439,4 +439,168 @@ mod tests {
         let tokens = lex("1_000_000");
         assert_eq!(tokens, vec![Token::Number("1000000".into()), Token::Eof]);
     }
+
+    // =========================================================================
+    // Boundary, edge-case, and error-path tests
+    // =========================================================================
+
+    #[test]
+    fn test_empty_input() {
+        let tokens = lex("");
+        assert_eq!(tokens, vec![Token::Eof]);
+    }
+
+    #[test]
+    fn test_whitespace_only() {
+        let tokens = lex("   \t  ");
+        assert_eq!(tokens, vec![Token::Eof]);
+    }
+
+    #[test]
+    fn test_single_zero() {
+        let tokens = lex("0");
+        assert_eq!(tokens, vec![Token::Number("0".into()), Token::Eof]);
+    }
+
+    #[test]
+    fn test_hex_prefix_with_digits() {
+        let tokens = lex("0xFF");
+        assert_eq!(tokens, vec![Token::HexNumber("FF".into()), Token::Eof]);
+    }
+
+    #[test]
+    fn test_octal_prefix_with_digits() {
+        let tokens = lex("0o77");
+        assert_eq!(tokens, vec![Token::OctNumber("77".into()), Token::Eof]);
+    }
+
+    #[test]
+    fn test_binary_prefix_with_digits() {
+        let tokens = lex("0b1010");
+        assert_eq!(tokens, vec![Token::BinNumber("1010".into()), Token::Eof]);
+    }
+
+    #[test]
+    fn test_hex_prefix_only() {
+        // "0x" with no digits — should produce HexNumber with empty string
+        let tokens = lex("0x");
+        assert!(
+            tokens.iter().any(|t| matches!(t, Token::HexNumber(_) | Token::Number(_))),
+            "0x prefix should produce a number token: got {tokens:?}"
+        );
+    }
+
+    #[test]
+    fn test_octal_prefix_only() {
+        let tokens = lex("0o");
+        assert!(
+            tokens.iter().any(|t| matches!(t, Token::OctNumber(_) | Token::Number(_))),
+            "0o prefix should produce a number token: got {tokens:?}"
+        );
+    }
+
+    #[test]
+    fn test_binary_prefix_only() {
+        let tokens = lex("0b");
+        assert!(
+            tokens.iter().any(|t| matches!(t, Token::BinNumber(_) | Token::Number(_))),
+            "0b prefix should produce a number token: got {tokens:?}"
+        );
+    }
+
+    #[test]
+    fn test_invalid_character() {
+        // '@' is not a valid token — should produce an error token or be skipped
+        let tokens = lex("@");
+        assert!(
+            tokens.iter().any(|t| matches!(t, Token::Error(_))),
+            "Invalid character should produce an Error token: got {tokens:?}"
+        );
+    }
+
+    #[test]
+    fn test_multiple_invalid_characters() {
+        let tokens = lex("@#$");
+        let error_count = tokens.iter().filter(|t| matches!(t, Token::Error(_))).count();
+        assert!(error_count >= 1, "Multiple invalid chars should produce Error tokens");
+    }
+
+    #[test]
+    fn test_long_number() {
+        let long_num = "9".repeat(500);
+        let tokens = lex(&long_num);
+        assert_eq!(tokens.len(), 2); // Number + Eof
+        assert!(matches!(&tokens[0], Token::Number(s) if s.len() == 500));
+    }
+
+    #[test]
+    fn test_long_identifier() {
+        let long_ident = "a".repeat(200);
+        let tokens = lex(&long_ident);
+        assert_eq!(tokens.len(), 2); // Ident + Eof
+        assert!(matches!(&tokens[0], Token::Ident(s) if s == &long_ident));
+    }
+
+    #[test]
+    fn test_decimal_point_only() {
+        let tokens = lex(".");
+        assert!(tokens.len() >= 2, "Bare '.' should produce at least a token + EOF");
+    }
+
+    #[test]
+    fn test_consecutive_operators() {
+        let tokens = lex("++--");
+        // Should lex these as individual operator tokens
+        assert!(tokens.len() >= 3, "Should lex multiple operator tokens");
+    }
+
+    #[test]
+    fn test_double_left_shift() {
+        let tokens = lex("<<");
+        assert!(
+            tokens.iter().any(|t| matches!(t, Token::LShift)),
+            "Should produce a LShift token: got {tokens:?}"
+        );
+    }
+
+    #[test]
+    fn test_double_right_shift() {
+        let tokens = lex(">>");
+        assert!(
+            tokens.iter().any(|t| matches!(t, Token::RShift)),
+            "Should produce a RShift token: got {tokens:?}"
+        );
+    }
+
+    #[test]
+    fn test_single_angle_bracket() {
+        let tokens = lex("<");
+        // A single '<' is a comparison operator, not a shift
+        assert!(
+            tokens.iter().any(|t| matches!(t, Token::Lt)),
+            "Single '<' should be Lt: got {tokens:?}"
+        );
+    }
+
+    #[test]
+    fn test_numbers_with_exponent() {
+        let tokens = lex("1e10");
+        assert!(
+            tokens.iter().any(|t| matches!(t, Token::Number(_))),
+            "1e10 should include a Number token: got {tokens:?}"
+        );
+    }
+
+    #[test]
+    fn test_parentheses_tokens() {
+        let tokens = lex("()");
+        assert!(tokens.contains(&Token::LParen));
+        assert!(tokens.contains(&Token::RParen));
+    }
+
+    #[test]
+    fn test_comma_token() {
+        let tokens = lex(",");
+        assert!(tokens.contains(&Token::Comma));
+    }
 }

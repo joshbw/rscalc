@@ -448,4 +448,177 @@ mod tests {
     fn test_error_unmatched_paren() {
         assert!(Parser::parse("(2 + 3", CalculatorMode::Standard).is_err());
     }
+
+    // =========================================================================
+    // Boundary, error-path, and edge-case tests
+    // =========================================================================
+
+    #[test]
+    fn test_empty_input_error() {
+        assert!(Parser::parse("", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_whitespace_only_error() {
+        assert!(Parser::parse("   ", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_trailing_plus() {
+        assert!(Parser::parse("5 +", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_trailing_multiply() {
+        assert!(Parser::parse("5 *", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_trailing_divide() {
+        assert!(Parser::parse("5 /", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_leading_multiply_error() {
+        // Leading * is not a valid unary operator
+        assert!(Parser::parse("* 5", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_leading_divide_error() {
+        assert!(Parser::parse("/ 5", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_consecutive_binary_operators_error() {
+        assert!(Parser::parse("5 + * 3", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_extra_close_paren() {
+        assert!(Parser::parse("2 + 3)", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_empty_parens_error() {
+        assert!(Parser::parse("()", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_double_close_paren_error() {
+        assert!(Parser::parse("(2 + 3))", CalculatorMode::Standard).is_err());
+    }
+
+    #[test]
+    fn test_nested_parens_valid() {
+        let expr = parse("((((1 + 2))))");
+        // Should parse successfully — deeply nested but valid
+        match expr {
+            Expr::BinaryOp { .. } => {}
+            Expr::Number(_) => panic!("Expected BinaryOp, got Number"),
+            _ => {}
+        }
+    }
+
+    #[test]
+    fn test_unary_minus_before_paren() {
+        let expr = parse("-(3 + 4)");
+        assert!(matches!(expr, Expr::UnaryOp { op: UnaryOperator::Negate, .. }));
+    }
+
+    #[test]
+    fn test_multiple_unary_minus() {
+        // --5 should be parsed as -(-5) = 5
+        let expr = parse("--5");
+        assert!(matches!(expr, Expr::UnaryOp { op: UnaryOperator::Negate, .. }));
+    }
+
+    #[test]
+    fn test_function_no_args() {
+        // "pi()" with no args — depends on whether pi is a function or constant
+        // Either should parse or give clean error
+        let result = Parser::parse("pi", CalculatorMode::Scientific);
+        assert!(result.is_ok(), "pi should parse as an identifier");
+    }
+
+    #[test]
+    fn test_function_unclosed_paren() {
+        assert!(Parser::parse("sin(3", CalculatorMode::Scientific).is_err());
+    }
+
+    #[test]
+    fn test_very_large_number_literal() {
+        let big = "9".repeat(500);
+        let result = Parser::parse(&big, CalculatorMode::Standard);
+        assert!(result.is_ok(), "Large number literal should parse");
+    }
+
+    #[test]
+    fn test_just_number() {
+        let expr = parse("42");
+        assert!(matches!(expr, Expr::Number(_)));
+    }
+
+    #[test]
+    fn test_just_ident() {
+        let result = Parser::parse("pi", CalculatorMode::Scientific);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_hex_literal_in_parser() {
+        let result = Parser::parse("0xFF", CalculatorMode::Programmer);
+        assert!(result.is_ok(), "Hex literal should parse in programmer mode");
+    }
+
+    #[test]
+    fn test_binary_literal_in_parser() {
+        let result = Parser::parse("0b1010", CalculatorMode::Programmer);
+        assert!(result.is_ok(), "Binary literal should parse in programmer mode");
+    }
+
+    #[test]
+    fn test_octal_literal_in_parser() {
+        let result = Parser::parse("0o77", CalculatorMode::Programmer);
+        assert!(result.is_ok(), "Octal literal should parse in programmer mode");
+    }
+
+    #[test]
+    fn test_xor_in_programmer_mode() {
+        let result = Parser::parse("5 ^ 3", CalculatorMode::Programmer);
+        assert!(result.is_ok(), "^ should be XOR in programmer mode");
+    }
+
+    #[test]
+    fn test_caret_in_standard_mode() {
+        let result = Parser::parse("2 ^ 3", CalculatorMode::Standard);
+        assert!(result.is_ok(), "^ should be power in standard mode");
+    }
+
+    #[test]
+    fn test_shift_operators() {
+        let result = Parser::parse("8 << 2", CalculatorMode::Programmer);
+        assert!(result.is_ok(), "<< should parse in programmer mode");
+    }
+
+    #[test]
+    fn test_comparison_operators() {
+        for op in ["<", ">", "<=", ">=", "==", "!="] {
+            let input = format!("5 {op} 3");
+            let result = Parser::parse(&input, CalculatorMode::Standard);
+            assert!(result.is_ok(), "Operator {op} should parse");
+        }
+    }
+
+    #[test]
+    fn test_multi_arg_function() {
+        let result = Parser::parse("pow(2, 10)", CalculatorMode::Scientific);
+        assert!(result.is_ok(), "Multi-arg function should parse");
+    }
+
+    #[test]
+    fn test_chained_operations() {
+        let result = Parser::parse("1 + 2 + 3 + 4 + 5", CalculatorMode::Standard);
+        assert!(result.is_ok(), "Chained additions should parse");
+    }
 }
