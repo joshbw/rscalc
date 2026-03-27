@@ -1,0 +1,27 @@
+[package]
+name = "rscalc"
+version = "0.1.0"
+edition = "2024"
+description = "A cross-platform CLI calculator powered by arbitrary-precision rational arithmetic"
+license = "MIT"
+repository = "https://github.com/joshbw/rscalc"
+
+[dependencies]
+calc_manager = { path = "calc_manager" }
+reedline = "0.39"
+clap = { version = "4", features = ["derive"] }
+colored = "3"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+cast_possible_truncation = "allow"
+cast_possible_wrap = "allow"
+cast_sign_loss = "allow"
+cast_precision_loss = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"

@@ -1,0 +1,3 @@
+[submodule "calc_manager"]
+	path = calc_manager
+	url = https://github.com/joshbw/rsCalcManager.git
