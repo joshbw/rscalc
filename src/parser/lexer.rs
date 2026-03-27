@@ -510,7 +510,10 @@ mod tests {
     #[test]
     fn test_multiple_invalid_characters() {
         let result = Lexer::new("@#$").tokenize();
-        assert!(result.is_err(), "Multiple invalid chars should produce an error");
+        assert!(
+            result.is_err(),
+            "Multiple invalid chars should produce an error"
+        );
     }
 
     #[test]
@@ -532,7 +535,10 @@ mod tests {
     #[test]
     fn test_decimal_point_only() {
         let tokens = lex(".");
-        assert!(tokens.len() >= 2, "Bare '.' should produce at least a token + EOF");
+        assert!(
+            tokens.len() >= 2,
+            "Bare '.' should produce at least a token + EOF"
+        );
     }
 
     #[test]
@@ -564,7 +570,10 @@ mod tests {
     fn test_single_angle_bracket() {
         // A single '<' is not valid — lexer returns Err
         let result = Lexer::new("<").tokenize();
-        assert!(result.is_err(), "Single '<' should be an error: got {result:?}");
+        assert!(
+            result.is_err(),
+            "Single '<' should be an error: got {result:?}"
+        );
     }
 
     #[test]

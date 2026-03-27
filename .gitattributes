@@ -1,0 +1,8 @@
+# Normalize line endings to LF on commit, regardless of platform.
+# This prevents cargo fmt --check failures on Linux CI when files
+# were committed with CRLF from Windows.
+* text=auto eol=lf
+
+# Explicitly mark binary files
+*.png binary
+*.ico binary

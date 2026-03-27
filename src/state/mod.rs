@@ -40,13 +40,18 @@ impl CalcState {
             None => true,
         };
         if needs_recompute {
-            self.constants_cache = Some((radix, precision, RatpackConstants::new(radix, precision)));
+            self.constants_cache =
+                Some((radix, precision, RatpackConstants::new(radix, precision)));
         }
     }
 
     /// Get a reference to the cached constants. Panics if not yet computed.
     pub fn cached_constants(&self) -> &RatpackConstants {
-        &self.constants_cache.as_ref().expect("constants not initialized").2
+        &self
+            .constants_cache
+            .as_ref()
+            .expect("constants not initialized")
+            .2
     }
 
     /// Eagerly warm the constants cache for the current settings.
