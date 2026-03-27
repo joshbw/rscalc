@@ -12,12 +12,13 @@ use crate::parser::ast::{Expr, UnaryOperator};
 use crate::state::CalcState;
 
 /// Evaluate an expression AST node against the current calculator state.
-pub fn evaluate(expr: &Expr, state: &CalcState) -> Result<Rational, String> {
+pub fn evaluate(expr: &Expr, state: &mut CalcState) -> Result<Rational, String> {
     let radix = state.settings.radix_type.to_radix();
     let precision = state.settings.precision();
-    let constants = RatpackConstants::new(radix, precision);
+    state.ensure_constants(radix, precision);
+    let constants = state.cached_constants();
 
-    eval_node(expr, state, radix, precision, &constants)
+    eval_node(expr, state, radix, precision, constants)
 }
 
 fn eval_node(
@@ -167,9 +168,9 @@ mod tests {
     use crate::state::CalcState;
 
     fn eval(input: &str) -> Rational {
-        let state = CalcState::new();
+        let mut state = CalcState::new();
         let expr = crate::parser::Parser::parse(input, state.settings.mode).unwrap();
-        evaluate(&expr, &state).unwrap()
+        evaluate(&expr, &mut state).unwrap()
     }
 
     fn eval_to_f64(input: &str) -> f64 {
@@ -235,9 +236,9 @@ mod tests {
 
     #[test]
     fn test_divide_by_zero() {
-        let state = CalcState::new();
+        let mut state = CalcState::new();
         let expr = crate::parser::Parser::parse("1 / 0", state.settings.mode).unwrap();
-        assert!(evaluate(&expr, &state).is_err());
+        assert!(evaluate(&expr, &mut state).is_err());
     }
 
     // =========================================================================
@@ -300,18 +301,18 @@ mod tests {
 
     #[test]
     fn test_eval_unknown_identifier() {
-        let state = CalcState::new();
+        let mut state = CalcState::new();
         let expr = crate::parser::Parser::parse("bogus", state.settings.mode).unwrap();
-        assert!(evaluate(&expr, &state).is_err(), "Unknown identifier should fail");
+        assert!(evaluate(&expr, &mut state).is_err(), "Unknown identifier should fail");
     }
 
     #[test]
     fn test_eval_unknown_function() {
-        let state = CalcState::new();
+        let mut state = CalcState::new();
         let result = crate::parser::Parser::parse("notafunction(5)", state.settings.mode);
         if let Ok(expr) = result {
             assert!(
-                evaluate(&expr, &state).is_err(),
+                evaluate(&expr, &mut state).is_err(),
                 "Unknown function should produce an error"
             );
         }
