@@ -12,12 +12,13 @@ use crate::parser::ast::{Expr, UnaryOperator};
 use crate::state::CalcState;
 
 /// Evaluate an expression AST node against the current calculator state.
-pub fn evaluate(expr: &Expr, state: &CalcState) -> Result<Rational, String> {
+pub fn evaluate(expr: &Expr, state: &mut CalcState) -> Result<Rational, String> {
     let radix = state.settings.radix_type.to_radix();
     let precision = state.settings.precision();
-    let constants = RatpackConstants::new(radix, precision);
+    state.ensure_constants(radix, precision);
+    let constants = state.cached_constants();
 
-    eval_node(expr, state, radix, precision, &constants)
+    eval_node(expr, state, radix, precision, constants)
 }
 
 fn eval_node(
@@ -167,9 +168,9 @@ mod tests {
     use crate::state::CalcState;
 
     fn eval(input: &str) -> Rational {
-        let state = CalcState::new();
+        let mut state = CalcState::new();
         let expr = crate::parser::Parser::parse(input, state.settings.mode).unwrap();
-        evaluate(&expr, &state).unwrap()
+        evaluate(&expr, &mut state).unwrap()
     }
 
     fn eval_to_f64(input: &str) -> f64 {
@@ -235,8 +236,135 @@ mod tests {
 
     #[test]
     fn test_divide_by_zero() {
-        let state = CalcState::new();
+        let mut state = CalcState::new();
         let expr = crate::parser::Parser::parse("1 / 0", state.settings.mode).unwrap();
-        assert!(evaluate(&expr, &state).is_err());
+        assert!(evaluate(&expr, &mut state).is_err());
+    }
+
+    // =========================================================================
+    // Boundary, domain-error, and edge-case tests
+    // =========================================================================
+
+    #[test]
+    fn test_eval_zero() {
+        let val = eval_to_f64("0");
+        assert_eq!(val, 0.0);
+    }
+
+    #[test]
+    fn test_eval_negative_number() {
+        let val = eval_to_f64("-5");
+        assert!((val - (-5.0)).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_double_negative() {
+        let val = eval_to_f64("--5");
+        assert!((val - 5.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_multiply_by_zero() {
+        let val = eval_to_f64("999 * 0");
+        assert_eq!(val, 0.0);
+    }
+
+    #[test]
+    fn test_eval_add_identity() {
+        let val = eval_to_f64("42 + 0");
+        assert!((val - 42.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_subtract_self() {
+        let val = eval_to_f64("100 - 100");
+        assert_eq!(val, 0.0);
+    }
+
+    #[test]
+    fn test_eval_divide_by_one() {
+        let val = eval_to_f64("42 / 1");
+        assert!((val - 42.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_power_zero_exponent() {
+        let val = eval_to_f64("5 ^ 0");
+        assert!((val - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_power_one_exponent() {
+        let val = eval_to_f64("7 ^ 1");
+        assert!((val - 7.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_unknown_identifier() {
+        let mut state = CalcState::new();
+        let expr = crate::parser::Parser::parse("bogus", state.settings.mode).unwrap();
+        assert!(evaluate(&expr, &mut state).is_err(), "Unknown identifier should fail");
+    }
+
+    #[test]
+    fn test_eval_unknown_function() {
+        let mut state = CalcState::new();
+        let result = crate::parser::Parser::parse("notafunction(5)", state.settings.mode);
+        if let Ok(expr) = result {
+            assert!(
+                evaluate(&expr, &mut state).is_err(),
+                "Unknown function should produce an error"
+            );
+        }
+        // If parsing itself fails, that's also acceptable
+    }
+
+    #[test]
+    fn test_eval_nested_arithmetic() {
+        let val = eval_to_f64("(2 + 3) * (4 - 1)");
+        assert!((val - 15.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_deeply_nested_parens() {
+        let val = eval_to_f64("((((((1 + 1))))))");
+        assert!((val - 2.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_large_number() {
+        let val = eval_to_f64("999999999");
+        assert!((val - 999999999.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_eval_decimal_precision() {
+        let val = eval_to_f64("1 / 3 * 3");
+        // Should be close to 1.0 with arbitrary-precision arithmetic
+        assert!((val - 1.0).abs() < 0.01, "1/3 * 3 should be ≈ 1, got {val}");
+    }
+
+    #[test]
+    fn test_eval_order_of_operations() {
+        let val = eval_to_f64("2 + 3 * 4");
+        assert!((val - 14.0).abs() < 1e-10, "Should be 14, not 20");
+    }
+
+    #[test]
+    fn test_eval_left_associativity() {
+        let val = eval_to_f64("10 - 3 - 2");
+        assert!((val - 5.0).abs() < 1e-10, "Should be 5, not 9");
+    }
+
+    #[test]
+    fn test_eval_unary_in_expression() {
+        let val = eval_to_f64("5 + -3");
+        assert!((val - 2.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_eval_multiple_divides() {
+        let val = eval_to_f64("100 / 2 / 5");
+        assert!((val - 10.0).abs() < 1e-10);
     }
 }

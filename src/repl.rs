@@ -52,6 +52,10 @@ fn build_prompt(state: &CalcState) -> DefaultPrompt {
 
 /// Run the interactive REPL.
 pub fn run_repl(state: &mut CalcState) {
+    // Pre-compute mathematical constants for the current mode so the first
+    // evaluation doesn't pay the transcendental-computation cost.
+    state.warm_constants();
+
     // Set up tab completion
     let completer = Box::new(DefaultCompleter::new(commands::completable_names()));
 
