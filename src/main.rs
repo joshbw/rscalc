@@ -11,7 +11,23 @@ use state::CalcState;
 
 /// rscalc — A cross-platform CLI calculator powered by arbitrary-precision rational arithmetic.
 #[derive(Parser)]
-#[command(name = "rscalc", version, about)]
+#[command(name = "rscalc", version, about, after_help = "\
+INTERACTIVE MODE:
+  Run without arguments to enter the REPL. In interactive mode, use these
+  commands to change settings on the fly:
+
+    :mode <standard|scientific|programmer>  Switch calculator mode
+    :angle <deg|rad|grad>                   Set angle unit (trig functions)
+    :base <dec|hex|oct|bin>                 Set display base
+    :width <qword|dword|word|byte>          Set integer width (programmer)
+    :fe                                     Toggle fixed/scientific notation
+    :precision <n>                          Set display precision (1-128)
+    :history                                Show calculation history
+    :help [topic]                           Help on: trig, hyper, exp, prog, functions
+    :quit                                   Exit
+
+  Memory: ms (store) mr (recall) mc (clear) m+ (add) m- (subtract)
+  Tab completion is available for commands and function names.")]
 struct Cli {
     /// Evaluate expression and exit (positional)
     #[arg(value_name = "EXPRESSION")]
