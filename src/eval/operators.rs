@@ -1,9 +1,6 @@
 /// Binary and unary operator dispatch to ratpack functions.
-
 use calc_manager::prelude::*;
-use calc_manager::ratpack::arithmetic::{
-    add_rat, div_rat, mul_rat, rem_rat, sub_rat,
-};
+use calc_manager::ratpack::arithmetic::{add_rat, div_rat, mul_rat, rem_rat, sub_rat};
 use calc_manager::ratpack::constants::RatpackConstants;
 use calc_manager::ratpack::exp::pow_rat;
 use calc_manager::ratpack::logic::{and_rat, lsh_rat, or_rat, rsh_rat, xor_rat};
@@ -25,9 +22,9 @@ pub fn eval_binary_op(
         BinaryOperator::Multiply => Ok(mul_rat(left, right, precision)),
         BinaryOperator::Divide => div_rat(left, right, precision),
         BinaryOperator::Modulo => {
-            let mut result = left.dup();
+            let result = left.dup();
             let b = right.dup();
-            rem_rat(&mut result, &b)?;
+            rem_rat(&result, &b)?;
             Ok(result)
         }
         BinaryOperator::Power => {

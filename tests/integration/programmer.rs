@@ -1,5 +1,4 @@
 /// Integration tests for programmer mode.
-
 use assert_cmd::Command;
 use predicates::prelude::*;
 
@@ -8,10 +7,7 @@ fn rscalc() -> Command {
 }
 
 fn prog(expr: &str) -> assert_cmd::assert::Assert {
-    rscalc()
-        .args(["-m", "prog", expr])
-        .assert()
-        .success()
+    rscalc().args(["-m", "prog", expr]).assert().success()
 }
 
 fn prog_hex(expr: &str) -> assert_cmd::assert::Assert {
@@ -23,63 +19,53 @@ fn prog_hex(expr: &str) -> assert_cmd::assert::Assert {
 
 #[test]
 fn test_hex_literal() {
-    prog("0xFF")
-        .stdout(predicate::str::contains("255"));
+    prog("0xFF").stdout(predicate::str::contains("255"));
 }
 
 #[test]
 fn test_octal_literal() {
-    prog("0o77")
-        .stdout(predicate::str::contains("63"));
+    prog("0o77").stdout(predicate::str::contains("63"));
 }
 
 #[test]
 fn test_binary_literal() {
-    prog("0b1010")
-        .stdout(predicate::str::contains("10"));
+    prog("0b1010").stdout(predicate::str::contains("10"));
 }
 
 #[test]
 fn test_bitwise_and() {
-    prog("0xFF & 0xF0")
-        .stdout(predicate::str::contains("240"));
+    prog("0xFF & 0xF0").stdout(predicate::str::contains("240"));
 }
 
 #[test]
 fn test_bitwise_or() {
-    prog("0x0F | 0xF0")
-        .stdout(predicate::str::contains("255"));
+    prog("0x0F | 0xF0").stdout(predicate::str::contains("255"));
 }
 
 #[test]
 fn test_bitwise_xor() {
     // In programmer mode, ^ is XOR
-    prog("0xFF ^ 0x0F")
-        .stdout(predicate::str::contains("240"));
+    prog("0xFF ^ 0x0F").stdout(predicate::str::contains("240"));
 }
 
 #[test]
 fn test_shift_left() {
-    prog("1 << 10")
-        .stdout(predicate::str::contains("1024"));
+    prog("1 << 10").stdout(predicate::str::contains("1024"));
 }
 
 #[test]
 fn test_shift_right() {
-    prog("1024 >> 2")
-        .stdout(predicate::str::contains("256"));
+    prog("1024 >> 2").stdout(predicate::str::contains("256"));
 }
 
 #[test]
 fn test_hex_display() {
-    prog_hex("255")
-        .stdout(predicate::str::contains("0xFF"));
+    prog_hex("255").stdout(predicate::str::contains("0xFF"));
 }
 
 #[test]
 fn test_hex_and_display() {
-    prog_hex("0xFF & 0xF0")
-        .stdout(predicate::str::contains("0xF0"));
+    prog_hex("0xFF & 0xF0").stdout(predicate::str::contains("0xF0"));
 }
 
 #[test]
@@ -94,6 +80,5 @@ fn test_multi_base_display() {
 #[test]
 fn test_double_star_power_in_prog() {
     // ** is always exponentiation, even in programmer mode
-    prog("2 ** 10")
-        .stdout(predicate::str::contains("1024"));
+    prog("2 ** 10").stdout(predicate::str::contains("1024"));
 }

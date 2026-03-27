@@ -1,5 +1,4 @@
 /// Integration tests for basic arithmetic operations.
-
 use assert_cmd::Command;
 use predicates::prelude::*;
 
@@ -119,10 +118,7 @@ fn test_factorial() {
 
 #[test]
 fn test_divide_by_zero() {
-    rscalc()
-        .arg("1 / 0")
-        .assert()
-        .failure();
+    rscalc().arg("1 / 0").assert().failure();
 }
 
 #[test]

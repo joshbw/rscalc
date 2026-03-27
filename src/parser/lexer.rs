@@ -1,5 +1,4 @@
 /// Lexer: tokenizes input strings into a stream of `Token`s.
-
 use super::tokens::Token;
 
 pub struct Lexer {
@@ -59,7 +58,7 @@ impl Lexer {
 
         match ch {
             '0'..='9' | '.' => self.read_number(),
-            'a'..='z' | 'A'..='Z' | '_' | '\u{03C0}' => self.read_ident_or_keyword(),
+            'a'..='z' | 'A'..='Z' | '_' | '\u{03C0}' => Ok(self.read_ident_or_keyword()),
             '+' => {
                 self.advance();
                 Ok(Token::Plus)
@@ -163,7 +162,8 @@ impl Lexer {
                 Some('b' | 'B') => {
                     // Distinguish binary prefix from hex digit in decimal context
                     let next_after = self.chars.get(self.pos + 1).copied();
-                    if matches!(next_after, Some('0' | '1')) || next_after.is_none()
+                    if matches!(next_after, Some('0' | '1'))
+                        || next_after.is_none()
                         || !next_after.unwrap().is_alphanumeric()
                     {
                         s.push(self.advance().unwrap());
@@ -264,13 +264,13 @@ impl Lexer {
         Ok(Token::Number(s))
     }
 
-    fn read_ident_or_keyword(&mut self) -> Result<Token, String> {
+    fn read_ident_or_keyword(&mut self) -> Token {
         let mut s = String::new();
 
         // Handle π as a single-character identifier
         if self.peek() == Some('\u{03C0}') {
             self.advance();
-            return Ok(Token::Ident("pi".to_string()));
+            return Token::Ident("pi".to_string());
         }
 
         while let Some(ch) = self.peek() {
@@ -284,10 +284,9 @@ impl Lexer {
 
         // Map keyword operators to tokens
         match s.as_str() {
-            "mod" => Ok(Token::Percent),
-            "xor" => Ok(Token::Caret),
-            "nand" | "nor" => Ok(Token::Ident(s)),
-            _ => Ok(Token::Ident(s)),
+            "mod" => Token::Percent,
+            "xor" => Token::Caret,
+            _ => Token::Ident(s),
         }
     }
 }

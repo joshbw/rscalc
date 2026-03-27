@@ -1,5 +1,4 @@
 /// Calculator state management: unifies settings, memory, history, and result.
-
 pub mod history;
 pub mod memory;
 pub mod settings;

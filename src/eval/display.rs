@@ -1,5 +1,4 @@
 /// Result formatting: convert Rational to display strings.
-
 use calc_manager::prelude::*;
 use calc_manager::ratpack::conv::rat_to_string;
 
@@ -27,7 +26,12 @@ pub fn format_programmer_result(
 
     let mut parts = vec![primary];
 
-    let bases = [RadixType::Hex, RadixType::Decimal, RadixType::Octal, RadixType::Binary];
+    let bases = [
+        RadixType::Hex,
+        RadixType::Decimal,
+        RadixType::Octal,
+        RadixType::Binary,
+    ];
     for base in &bases {
         if *base != primary_radix {
             let formatted = format_with_prefix(val, *base, precision);

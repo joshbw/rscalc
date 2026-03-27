@@ -1,9 +1,6 @@
 /// Interactive REPL loop using reedline.
-
 use colored::Colorize;
-use reedline::{
-    DefaultCompleter, DefaultPrompt, DefaultPromptSegment, Reedline, Signal,
-};
+use reedline::{DefaultCompleter, DefaultPrompt, DefaultPromptSegment, Reedline, Signal};
 
 use calc_manager::prelude::*;
 
@@ -56,9 +53,7 @@ fn build_prompt(state: &CalcState) -> DefaultPrompt {
 /// Run the interactive REPL.
 pub fn run_repl(state: &mut CalcState) {
     // Set up tab completion
-    let completer = Box::new(DefaultCompleter::new(
-        commands::completable_names(),
-    ));
+    let completer = Box::new(DefaultCompleter::new(commands::completable_names()));
 
     let mut line_editor = Reedline::create().with_completer(completer);
 
@@ -72,7 +67,7 @@ pub fn run_repl(state: &mut CalcState) {
                 }
                 process_input(input, state);
             }
-            Ok(Signal::CtrlD) | Ok(Signal::CtrlC) => {
+            Ok(Signal::CtrlD | Signal::CtrlC) => {
                 break;
             }
             Err(err) => {
@@ -90,10 +85,7 @@ pub fn process_input(input: &str, state: &mut CalcState) {
         CommandResult::Ok(msg) => {
             println!("  {}", msg.green());
         }
-        CommandResult::Help(text) => {
-            println!("{text}");
-        }
-        CommandResult::History(text) => {
+        CommandResult::Help(text) | CommandResult::History(text) => {
             println!("{text}");
         }
         CommandResult::Clear => {
@@ -150,8 +142,6 @@ fn evaluate_expression(input: &str, state: &mut CalcState) {
     println!("  {}", display_str.cyan());
 
     // Update state
-    state
-        .history
-        .push(input.to_string(), display_str);
+    state.history.push(input.to_string(), display_str);
     state.last_result = Some(result);
 }

@@ -1,5 +1,4 @@
 /// Abstract Syntax Tree node types for parsed expressions.
-
 /// A parsed expression.
 #[derive(Debug, Clone)]
 pub enum Expr {
@@ -26,10 +25,7 @@ pub enum Expr {
     Factorial(Box<Expr>),
 
     /// Function call: `sin(x)`, `log(x, b)`, `rand()`
-    FunctionCall {
-        name: String,
-        args: Vec<Expr>,
-    },
+    FunctionCall { name: String, args: Vec<Expr> },
 }
 
 /// Unary (prefix) operators.

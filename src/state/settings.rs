@@ -1,5 +1,4 @@
 /// Calculator settings: mode, angle type, radix, word width, precision.
-
 use calc_manager::prelude::*;
 
 /// All configurable calculator settings.
@@ -33,15 +32,9 @@ impl Settings {
             return p;
         }
         match self.mode {
-            CalculatorMode::Standard => {
-                CalculatorPrecision::Standard as i32
-            }
-            CalculatorMode::Scientific => {
-                CalculatorPrecision::Scientific as i32
-            }
-            CalculatorMode::Programmer => {
-                CalculatorPrecision::Programmer as i32
-            }
+            CalculatorMode::Standard => CalculatorPrecision::Standard as i32,
+            CalculatorMode::Scientific => CalculatorPrecision::Scientific as i32,
+            CalculatorMode::Programmer => CalculatorPrecision::Programmer as i32,
         }
     }
 
@@ -49,9 +42,9 @@ impl Settings {
     pub fn word_mask(&self) -> u64 {
         match self.num_width {
             NumWidth::QWord => u64::MAX,
-            NumWidth::DWord => u32::MAX as u64,
-            NumWidth::Word => u16::MAX as u64,
-            NumWidth::Byte => u8::MAX as u64,
+            NumWidth::DWord => u64::from(u32::MAX),
+            NumWidth::Word => u64::from(u16::MAX),
+            NumWidth::Byte => u64::from(u8::MAX),
         }
     }
 
@@ -59,8 +52,7 @@ impl Settings {
     pub fn toggle_notation(&mut self) {
         self.number_format = match self.number_format {
             NumberFormat::Float => NumberFormat::Scientific,
-            NumberFormat::Scientific => NumberFormat::Float,
-            NumberFormat::Engineering => NumberFormat::Float,
+            NumberFormat::Scientific | NumberFormat::Engineering => NumberFormat::Float,
         };
     }
 }

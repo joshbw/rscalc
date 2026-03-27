@@ -1,5 +1,4 @@
 /// Memory operations: MS, MR, MC, M+, M-.
-
 use calc_manager::prelude::Rational;
 use calc_manager::ratpack::arithmetic::{add_rat, sub_rat};
 
@@ -54,6 +53,7 @@ impl Memory {
     }
 
     /// Check if memory has a stored value.
+    #[allow(dead_code)]
     pub fn has_value(&self) -> bool {
         self.value.is_some()
     }

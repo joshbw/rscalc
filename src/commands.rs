@@ -1,5 +1,4 @@
 /// REPL meta-commands: `:mode`, `:angle`, `:base`, `:width`, `:help`, etc.
-
 use calc_manager::prelude::*;
 
 use crate::eval::functions;
@@ -220,7 +219,12 @@ fn cmd_history(state: &CalcState) -> CommandResult {
     }
     let mut lines = Vec::new();
     for (i, entry) in state.history.entries().iter().enumerate() {
-        lines.push(format!("  [{}] {} = {}", i + 1, entry.expression, entry.result));
+        lines.push(format!(
+            "  [{}] {} = {}",
+            i + 1,
+            entry.expression,
+            entry.result
+        ));
     }
     CommandResult::History(lines.join("\n"))
 }
@@ -296,7 +300,7 @@ fn cmd_help(args: &[&str]) -> CommandResult {
 
 fn general_help() -> String {
     format!(
-        r#"rscalc — CLI Calculator
+        r"rscalc — CLI Calculator
 
   Type mathematical expressions to evaluate them.
   Examples:  2 + 3    sin(pi/6)    2^10    sqrt(2)    5!
@@ -317,13 +321,13 @@ Memory:  ms (store)  mr (recall)  mc (clear)  m+ (add)  m- (subtract)
 Constants:  pi (π)  e  ans (last result)
 
 Available functions: {}
-"#,
+",
         functions::function_names().join(", ")
     )
 }
 
 fn trig_help() -> String {
-    r#"Trigonometric Functions (affected by :angle setting):
+    r"Trigonometric Functions (affected by :angle setting):
   sin(x)   cos(x)   tan(x)     — basic trig
   asin(x)  acos(x)  atan(x)    — inverse trig
   sec(x)   csc(x)   cot(x)     — reciprocal trig
@@ -333,22 +337,22 @@ fn trig_help() -> String {
     sin(pi/6)         → 0.5  (with :angle rad)
     sin(30)           → 0.5  (with :angle deg)
     asin(0.5)         → 30   (with :angle deg)
-"#
+"
     .to_string()
 }
 
 fn hyperbolic_help() -> String {
-    r#"Hyperbolic Functions:
+    r"Hyperbolic Functions:
   sinh(x)   cosh(x)   tanh(x)     — basic hyperbolic
   asinh(x)  acosh(x)  atanh(x)    — inverse hyperbolic
   sech(x)   csch(x)   coth(x)     — reciprocal hyperbolic
   asech(x)  acsch(x)  acoth(x)    — inverse reciprocal hyperbolic
-"#
+"
     .to_string()
 }
 
 fn exp_log_help() -> String {
-    r#"Exponential & Logarithmic Functions:
+    r"Exponential & Logarithmic Functions:
   exp(x)       — e^x
   ln(x)        — natural logarithm
   log(x)       — base-10 logarithm
@@ -360,12 +364,12 @@ fn exp_log_help() -> String {
   root(x, n)   — nth root of x
   sqr(x)       — x²
   cube(x)      — x³
-"#
+"
     .to_string()
 }
 
 fn programmer_help() -> String {
-    r#"Programmer Mode (:mode programmer):
+    r"Programmer Mode (:mode programmer):
   Operators: & (AND)  | (OR)  ^ (XOR)  ~ (NOT)  << (shift left)  >> (shift right)
   Literals:  0xFF (hex)  0o77 (octal)  0b1010 (binary)
   Commands:  :base hex/dec/oct/bin    :width qword/dword/word/byte
@@ -378,12 +382,12 @@ fn programmer_help() -> String {
     0xFF & 0xF0    → 0xF0
     1 << 10        → 0x400
     ~0xFF :byte    → 0x00
-"#
+"
     .to_string()
 }
 
 fn commands_help() -> String {
-    r#"REPL Commands:
+    r"REPL Commands:
   :mode standard|sci|prog    Switch calculator mode
   :angle deg|rad|grad        Set angle unit (affects trig functions)
   :base dec|hex|oct|bin      Set display base (programmer mode)
@@ -396,12 +400,12 @@ fn commands_help() -> String {
   :quit                      Exit rscalc
 
   Memory: ms  mr  mc  m+  m-
-"#
+"
     .to_string()
 }
 
 fn all_functions_help() -> String {
-    r#"All Available Functions:
+    r"All Available Functions:
 
   Trig:        sin cos tan asin acos atan sec csc cot asec acsc acot
   Hyperbolic:  sinh cosh tanh asinh acosh atanh sech csch coth asech acsch acoth
@@ -411,7 +415,7 @@ fn all_functions_help() -> String {
   Other:       abs floor ceil trunc recip rand
 
   Constants:   pi (π)  e  ans
-"#
+"
     .to_string()
 }
 
@@ -421,8 +425,17 @@ pub fn completable_names() -> Vec<String> {
 
     // Commands
     for cmd in &[
-        ":mode", ":angle", ":base", ":width", ":fe", ":precision",
-        ":history", ":clear", ":help", ":quit", ":exit",
+        ":mode",
+        ":angle",
+        ":base",
+        ":width",
+        ":fe",
+        ":precision",
+        ":history",
+        ":clear",
+        ":help",
+        ":quit",
+        ":exit",
     ] {
         names.push((*cmd).to_string());
     }

@@ -1,5 +1,4 @@
 /// Expression evaluator: walks the AST and produces Rational results.
-
 pub mod display;
 pub mod functions;
 pub mod operators;
@@ -9,7 +8,7 @@ use calc_manager::ratpack::constants::RatpackConstants;
 use calc_manager::ratpack::conv::string_to_rat;
 use calc_manager::ratpack::fact::fact_rat;
 
-use crate::parser::ast::{BinaryOperator, Expr, UnaryOperator};
+use crate::parser::ast::{Expr, UnaryOperator};
 use crate::state::CalcState;
 
 /// Evaluate an expression AST node against the current calculator state.
@@ -33,7 +32,7 @@ fn eval_node(
         Expr::Ident(name) => resolve_ident(name, state, constants),
         Expr::UnaryOp { op, operand } => {
             let val = eval_node(operand, state, radix, precision, constants)?;
-            eval_unary(*op, val, radix, precision, state)
+            eval_unary(*op, &val, radix, precision, state)
         }
         Expr::BinaryOp { op, left, right } => {
             let l = eval_node(left, state, radix, precision, constants)?;
@@ -83,7 +82,7 @@ fn parse_number(s: &str, _default_radix: u32, precision: i32) -> Result<Rational
     }
 
     // Handle scientific notation: split into mantissa and exponent
-    if let Some(e_pos) = s.find(|c: char| c == 'e' || c == 'E') {
+    if let Some(e_pos) = s.find(['e', 'E']) {
         let mantissa = &s[..e_pos];
         let exp_str = &s[e_pos + 1..];
         let (exp_neg, exp_digits) = if let Some(stripped) = exp_str.strip_prefix('-') {
@@ -135,7 +134,7 @@ fn resolve_ident(
 /// Evaluate a unary operation.
 fn eval_unary(
     op: UnaryOperator,
-    val: Rational,
+    val: &Rational,
     radix: u32,
     precision: i32,
     state: &CalcState,
@@ -167,13 +166,8 @@ mod tests {
 
     fn eval_to_f64(input: &str) -> f64 {
         let result = eval(input);
-        let s = calc_manager::ratpack::conv::rat_to_string(
-            &result,
-            NumberFormat::Float,
-            10,
-            16,
-        )
-        .unwrap();
+        let s = calc_manager::ratpack::conv::rat_to_string(&result, NumberFormat::Float, 10, 16)
+            .unwrap();
         s.trim().parse::<f64>().unwrap()
     }
 

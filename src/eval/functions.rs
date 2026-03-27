@@ -1,19 +1,18 @@
 /// Function registry: maps function names to ratpack calls.
-
 use calc_manager::prelude::*;
 use calc_manager::ratpack::arithmetic::{add_rat, div_rat, mul_rat, sub_rat};
 use calc_manager::ratpack::constants::RatpackConstants;
-use calc_manager::ratpack::exp::{exp_rat, log10_rat, log_rat, pow_rat, root_rat};
-use calc_manager::ratpack::fact::fact_rat;
+use calc_manager::ratpack::exp::{exp_rat, log_rat, log10_rat, pow_rat, root_rat};
 use calc_manager::ratpack::itrans::{
-    acosh_rat, acos_angle_rat, asin_angle_rat, asinh_rat, atanh_rat, atan_angle_rat,
+    acos_angle_rat, acosh_rat, asin_angle_rat, asinh_rat, atan_angle_rat, atanh_rat,
 };
 use calc_manager::ratpack::support::{frac_rat, int_rat};
 use calc_manager::ratpack::trans::{
-    cosh_rat, cos_angle_rat, sin_angle_rat, sinh_rat, tan_angle_rat, tanh_rat,
+    cos_angle_rat, cosh_rat, sin_angle_rat, sinh_rat, tan_angle_rat, tanh_rat,
 };
 
 /// Evaluate a named function call.
+#[allow(clippy::too_many_lines)]
 pub fn eval_function(
     name: &str,
     args: &[Rational],
@@ -326,14 +325,14 @@ pub fn eval_function(
 }
 
 fn check_args(name: &str, args: &[Rational], expected: usize) -> Result<(), String> {
-    if args.len() != expected {
+    if args.len() == expected {
+        Ok(())
+    } else {
         Err(format!(
             "{name}() expects {expected} argument{}, got {}",
             if expected == 1 { "" } else { "s" },
             args.len()
         ))
-    } else {
-        Ok(())
     }
 }
 
@@ -348,7 +347,7 @@ fn pseudo_random_rational(precision: i32) -> Rational {
     // LCG-based simple random
     let a: u64 = 6_364_136_223_846_793_005;
     let c: u64 = 1_442_695_040_888_963_407;
-    let val = seed as u64;
+    let val = u64::from(seed);
     let val = val.wrapping_mul(a).wrapping_add(c);
 
     // Create fraction val / 2^32 to get [0, 1)
@@ -361,12 +360,9 @@ fn pseudo_random_rational(precision: i32) -> Rational {
 /// List of all known function names, for tab-completion and help.
 pub fn function_names() -> &'static [&'static str] {
     &[
-        "sin", "cos", "tan", "asin", "acos", "atan",
-        "sec", "csc", "cot", "asec", "acsc", "acot",
-        "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
-        "sech", "csch", "coth", "asech", "acsch", "acoth",
-        "exp", "ln", "log", "pow10", "pow2",
-        "sqrt", "cbrt", "root", "sqr", "cube",
-        "abs", "floor", "ceil", "trunc", "recip", "rand",
+        "sin", "cos", "tan", "asin", "acos", "atan", "sec", "csc", "cot", "asec", "acsc", "acot",
+        "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sech", "csch", "coth", "asech",
+        "acsch", "acoth", "exp", "ln", "log", "pow10", "pow2", "sqrt", "cbrt", "root", "sqr",
+        "cube", "abs", "floor", "ceil", "trunc", "recip", "rand",
     ]
 }

@@ -3,7 +3,6 @@
 /// Supports mode-dependent operator semantics: in Standard/Scientific mode,
 /// `^` means exponentiation; in Programmer mode, `^` means XOR and `**` is
 /// used for exponentiation.
-
 pub mod ast;
 pub mod lexer;
 pub mod tokens;
@@ -76,7 +75,7 @@ impl Parser {
         loop {
             // Handle postfix factorial
             if *self.current() == Token::Bang {
-                let ((), post_bp) = self.postfix_bp(&Token::Bang);
+                let ((), post_bp) = Self::postfix_bp();
                 if post_bp < min_bp {
                     break;
                 }
@@ -126,7 +125,7 @@ impl Parser {
             }
             Token::Minus => {
                 self.advance();
-                let ((), r_bp) = self.prefix_bp();
+                let ((), r_bp) = Self::prefix_bp();
                 let operand = self.parse_expr(r_bp)?;
                 Ok(Expr::UnaryOp {
                     op: UnaryOperator::Negate,
@@ -135,7 +134,7 @@ impl Parser {
             }
             Token::Tilde => {
                 self.advance();
-                let ((), r_bp) = self.prefix_bp();
+                let ((), r_bp) = Self::prefix_bp();
                 let operand = self.parse_expr(r_bp)?;
                 Ok(Expr::UnaryOp {
                     op: UnaryOperator::BitwiseNot,
@@ -166,20 +165,20 @@ impl Parser {
     }
 
     /// Prefix binding power (unary `-` and `~`).
-    fn prefix_bp(&self) -> ((), u8) {
+    fn prefix_bp() -> ((), u8) {
         // Precedence 3 in the design: higher than exponentiation
         ((), 17)
     }
 
     /// Postfix binding power (factorial `!`).
-    fn postfix_bp(&self, _tok: &Token) -> ((), u8) {
+    fn postfix_bp() -> ((), u8) {
         // Precedence 2 in the design: highest after parentheses
         ((), 19)
     }
 
-    /// Infix binding power. Returns (left_bp, right_bp).
-    /// Left-associative: left_bp < right_bp.
-    /// Right-associative: left_bp > right_bp.
+    /// Infix binding power. Returns (`left_bp`, `right_bp`).
+    /// Left-associative: `left_bp` < `right_bp`.
+    /// Right-associative: `left_bp` > `right_bp`.
     fn infix_bp(&self, tok: &Token) -> Option<(u8, u8)> {
         match tok {
             Token::Pipe => Some((1, 2)),
@@ -279,7 +278,13 @@ mod tests {
                 right,
                 ..
             } => {
-                assert!(matches!(*right, Expr::BinaryOp { op: BinaryOperator::Multiply, .. }));
+                assert!(matches!(
+                    *right,
+                    Expr::BinaryOp {
+                        op: BinaryOperator::Multiply,
+                        ..
+                    }
+                ));
             }
             other => panic!("Expected Add at top, got {other:?}"),
         }
@@ -294,7 +299,13 @@ mod tests {
                 right,
                 ..
             } => {
-                assert!(matches!(*right, Expr::BinaryOp { op: BinaryOperator::Power, .. }));
+                assert!(matches!(
+                    *right,
+                    Expr::BinaryOp {
+                        op: BinaryOperator::Power,
+                        ..
+                    }
+                ));
             }
             other => panic!("Expected Power at top with Power on right, got {other:?}"),
         }
@@ -360,14 +371,26 @@ mod tests {
     fn test_nested_parens() {
         // ((2 + 3)) should parse fine
         let expr = parse("((2 + 3))");
-        assert!(matches!(expr, Expr::BinaryOp { op: BinaryOperator::Add, .. }));
+        assert!(matches!(
+            expr,
+            Expr::BinaryOp {
+                op: BinaryOperator::Add,
+                ..
+            }
+        ));
     }
 
     #[test]
     fn test_complex_expression() {
         // sin(pi / 6) + 2 * 3 should parse
         let expr = parse("sin(pi / 6) + 2 * 3");
-        assert!(matches!(expr, Expr::BinaryOp { op: BinaryOperator::Add, .. }));
+        assert!(matches!(
+            expr,
+            Expr::BinaryOp {
+                op: BinaryOperator::Add,
+                ..
+            }
+        ));
     }
 
     #[test]

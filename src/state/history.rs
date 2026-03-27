@@ -1,5 +1,4 @@
 /// Calculation history: ordered list of (expression, result) pairs.
-
 /// A single history entry.
 #[derive(Debug, Clone)]
 pub struct HistoryEntry {
@@ -34,6 +33,7 @@ impl History {
     }
 
     /// Get the number of entries.
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.entries.len()
     }
