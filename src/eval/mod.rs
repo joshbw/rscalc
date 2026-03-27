@@ -303,7 +303,10 @@ mod tests {
     fn test_eval_unknown_identifier() {
         let mut state = CalcState::new();
         let expr = crate::parser::Parser::parse("bogus", state.settings.mode).unwrap();
-        assert!(evaluate(&expr, &mut state).is_err(), "Unknown identifier should fail");
+        assert!(
+            evaluate(&expr, &mut state).is_err(),
+            "Unknown identifier should fail"
+        );
     }
 
     #[test]

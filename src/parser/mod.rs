@@ -523,14 +523,26 @@ mod tests {
     #[test]
     fn test_unary_minus_before_paren() {
         let expr = parse("-(3 + 4)");
-        assert!(matches!(expr, Expr::UnaryOp { op: UnaryOperator::Negate, .. }));
+        assert!(matches!(
+            expr,
+            Expr::UnaryOp {
+                op: UnaryOperator::Negate,
+                ..
+            }
+        ));
     }
 
     #[test]
     fn test_multiple_unary_minus() {
         // --5 should be parsed as -(-5) = 5
         let expr = parse("--5");
-        assert!(matches!(expr, Expr::UnaryOp { op: UnaryOperator::Negate, .. }));
+        assert!(matches!(
+            expr,
+            Expr::UnaryOp {
+                op: UnaryOperator::Negate,
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -568,19 +580,28 @@ mod tests {
     #[test]
     fn test_hex_literal_in_parser() {
         let result = Parser::parse("0xFF", CalculatorMode::Programmer);
-        assert!(result.is_ok(), "Hex literal should parse in programmer mode");
+        assert!(
+            result.is_ok(),
+            "Hex literal should parse in programmer mode"
+        );
     }
 
     #[test]
     fn test_binary_literal_in_parser() {
         let result = Parser::parse("0b1010", CalculatorMode::Programmer);
-        assert!(result.is_ok(), "Binary literal should parse in programmer mode");
+        assert!(
+            result.is_ok(),
+            "Binary literal should parse in programmer mode"
+        );
     }
 
     #[test]
     fn test_octal_literal_in_parser() {
         let result = Parser::parse("0o77", CalculatorMode::Programmer);
-        assert!(result.is_ok(), "Octal literal should parse in programmer mode");
+        assert!(
+            result.is_ok(),
+            "Octal literal should parse in programmer mode"
+        );
     }
 
     #[test]
@@ -607,7 +628,10 @@ mod tests {
         for op in ["<", ">", "<=", ">=", "==", "!="] {
             let input = format!("5 {op} 3");
             let result = Parser::parse(&input, CalculatorMode::Standard);
-            assert!(result.is_err(), "Operator {op} should not parse in a calculator");
+            assert!(
+                result.is_err(),
+                "Operator {op} should not parse in a calculator"
+            );
         }
     }
 

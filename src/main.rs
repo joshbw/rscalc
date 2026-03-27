@@ -11,7 +11,11 @@ use state::CalcState;
 
 /// rscalc — A cross-platform CLI calculator powered by arbitrary-precision rational arithmetic.
 #[derive(Parser)]
-#[command(name = "rscalc", version, about, after_help = "\
+#[command(
+    name = "rscalc",
+    version,
+    about,
+    after_help = "\
 INTERACTIVE MODE:
   Run without arguments to enter the REPL. In interactive mode, use these
   commands to change settings on the fly:
@@ -27,7 +31,8 @@ INTERACTIVE MODE:
     :quit                                   Exit
 
   Memory: ms (store) mr (recall) mc (clear) m+ (add) m- (subtract)
-  Tab completion is available for commands and function names.")]
+  Tab completion is available for commands and function names."
+)]
 struct Cli {
     /// Evaluate expression and exit (positional)
     #[arg(value_name = "EXPRESSION")]
