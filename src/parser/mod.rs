@@ -12,11 +12,15 @@ use tokens::Token;
 
 use calc_manager::prelude::CalculatorMode;
 
+/// Maximum recursion depth for expression parsing.
+const MAX_DEPTH: usize = 256;
+
 /// Parser state wrapping a token stream.
 pub struct Parser {
     tokens: Vec<Token>,
     pos: usize,
     mode: CalculatorMode,
+    depth: usize,
 }
 
 /// Parse result type.
@@ -28,6 +32,7 @@ impl Parser {
             tokens,
             pos: 0,
             mode,
+            depth: 0,
         }
     }
 
@@ -70,6 +75,16 @@ impl Parser {
 
     /// Main Pratt parsing entry: parse expression with minimum binding power.
     fn parse_expr(&mut self, min_bp: u8) -> ParseResult {
+        self.depth += 1;
+        if self.depth > MAX_DEPTH {
+            return Err("Expression too deeply nested".to_string());
+        }
+        let result = self.parse_expr_inner(min_bp);
+        self.depth -= 1;
+        result
+    }
+
+    fn parse_expr_inner(&mut self, min_bp: u8) -> ParseResult {
         let mut lhs = self.parse_prefix()?;
 
         loop {
@@ -232,8 +247,8 @@ impl Parser {
             Token::LogicalShiftRight => Ok(BinaryOperator::LogicalShiftRight),
             Token::Ident(name) => match name.as_str() {
                 "xor" => Ok(BinaryOperator::BitwiseXor),
-                "nand" => Ok(BinaryOperator::BitwiseAnd), // nand is handled at eval level
-                "nor" => Ok(BinaryOperator::BitwiseOr),   // nor is handled at eval level
+                "nand" => Ok(BinaryOperator::BitwiseNand),
+                "nor" => Ok(BinaryOperator::BitwiseNor),
                 _ => Err(format!("Unknown binary operator: {name}")),
             },
             _ => Err(format!("Expected binary operator, found: {tok}")),

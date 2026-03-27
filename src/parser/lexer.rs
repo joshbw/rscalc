@@ -1,6 +1,12 @@
 /// Lexer: tokenizes input strings into a stream of `Token`s.
 use super::tokens::Token;
 
+/// Maximum length for any single token (numeric literal or identifier).
+const MAX_TOKEN_LEN: usize = 10_000;
+
+/// Maximum length for identifiers (function/constant names).
+const MAX_IDENT_LEN: usize = 256;
+
 pub struct Lexer {
     chars: Vec<char>,
     pos: usize,
@@ -58,7 +64,7 @@ impl Lexer {
 
         match ch {
             '0'..='9' | '.' => self.read_number(),
-            'a'..='z' | 'A'..='Z' | '_' | '\u{03C0}' => Ok(self.read_ident_or_keyword()),
+            'a'..='z' | 'A'..='Z' | '_' | '\u{03C0}' => self.read_ident_or_keyword(),
             '+' => {
                 self.advance();
                 Ok(Token::Plus)
@@ -163,8 +169,7 @@ impl Lexer {
                     // Distinguish binary prefix from hex digit in decimal context
                     let next_after = self.chars.get(self.pos + 1).copied();
                     if matches!(next_after, Some('0' | '1'))
-                        || next_after.is_none()
-                        || !next_after.unwrap().is_alphanumeric()
+                        || !next_after.is_some_and(char::is_alphanumeric)
                     {
                         s.push(self.advance().unwrap());
                         return self.read_binary_digits(s);
@@ -176,13 +181,13 @@ impl Lexer {
         }
 
         // Decimal number (may include fractional part and exponent)
-        self.read_decimal_digits(&mut s);
+        self.read_decimal_digits(&mut s)?;
 
         // Fractional part
         if self.peek() == Some('.') {
             s.push('.');
             self.advance();
-            self.read_decimal_digits(&mut s);
+            self.read_decimal_digits(&mut s)?;
         }
 
         // Exponent part
@@ -191,23 +196,27 @@ impl Lexer {
             if matches!(self.peek(), Some('+' | '-')) {
                 s.push(self.advance().unwrap());
             }
-            self.read_decimal_digits(&mut s);
+            self.read_decimal_digits(&mut s)?;
         }
 
         Ok(Token::Number(s))
     }
 
-    fn read_decimal_digits(&mut self, s: &mut String) {
+    fn read_decimal_digits(&mut self, s: &mut String) -> Result<(), String> {
         while let Some(ch) = self.peek() {
             if ch.is_ascii_digit() || ch == '_' {
                 if ch != '_' {
                     s.push(ch);
                 }
                 self.advance();
+                if s.len() > MAX_TOKEN_LEN {
+                    return Err("Numeric literal too long".to_string());
+                }
             } else {
                 break;
             }
         }
+        Ok(())
     }
 
     fn read_hex_digits(&mut self, mut s: String) -> Result<Token, String> {
@@ -218,6 +227,9 @@ impl Lexer {
                     s.push(ch);
                 }
                 self.advance();
+                if s.len() > MAX_TOKEN_LEN {
+                    return Err("Numeric literal too long".to_string());
+                }
             } else {
                 break;
             }
@@ -236,6 +248,9 @@ impl Lexer {
                     s.push(ch);
                 }
                 self.advance();
+                if s.len() > MAX_TOKEN_LEN {
+                    return Err("Numeric literal too long".to_string());
+                }
             } else {
                 break;
             }
@@ -254,6 +269,9 @@ impl Lexer {
                     s.push(ch);
                 }
                 self.advance();
+                if s.len() > MAX_TOKEN_LEN {
+                    return Err("Numeric literal too long".to_string());
+                }
             } else {
                 break;
             }
@@ -264,19 +282,22 @@ impl Lexer {
         Ok(Token::Number(s))
     }
 
-    fn read_ident_or_keyword(&mut self) -> Token {
+    fn read_ident_or_keyword(&mut self) -> Result<Token, String> {
         let mut s = String::new();
 
         // Handle π as a single-character identifier
         if self.peek() == Some('\u{03C0}') {
             self.advance();
-            return Token::Ident("pi".to_string());
+            return Ok(Token::Ident("pi".to_string()));
         }
 
         while let Some(ch) = self.peek() {
             if ch.is_alphanumeric() || ch == '_' {
                 s.push(ch);
                 self.advance();
+                if s.len() > MAX_IDENT_LEN {
+                    return Err("Identifier too long".to_string());
+                }
             } else {
                 break;
             }
@@ -284,9 +305,9 @@ impl Lexer {
 
         // Map keyword operators to tokens
         match s.as_str() {
-            "mod" => Token::Percent,
-            "xor" => Token::Caret,
-            _ => Token::Ident(s),
+            "mod" => Ok(Token::Percent),
+            // `xor` stays as Ident so the parser can handle it in all modes
+            _ => Ok(Token::Ident(s)),
         }
     }
 }

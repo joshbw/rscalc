@@ -15,6 +15,7 @@ pub fn eval_binary_op(
     radix: u32,
     precision: i32,
     constants: &RatpackConstants,
+    word_mask: u64,
 ) -> Result<Rational, CalcError> {
     match op {
         BinaryOperator::Add => Ok(add_rat(left, right, precision)),
@@ -47,15 +48,43 @@ pub fn eval_binary_op(
             xor_rat(&mut result, right, radix, precision)?;
             Ok(result)
         }
+        BinaryOperator::BitwiseNand => {
+            let mut result = left.dup();
+            and_rat(&mut result, right, radix, precision)?;
+            let val = result
+                .to_u64(radix, precision)
+                .map_err(|_| CalcError::Domain)?;
+            Ok(Rational::from_u64((!val) & word_mask))
+        }
+        BinaryOperator::BitwiseNor => {
+            let mut result = left.dup();
+            or_rat(&mut result, right, radix, precision)?;
+            let val = result
+                .to_u64(radix, precision)
+                .map_err(|_| CalcError::Domain)?;
+            Ok(Rational::from_u64((!val) & word_mask))
+        }
         BinaryOperator::ShiftLeft => {
             let mut result = left.dup();
             lsh_rat(&mut result, right, radix, precision)?;
             Ok(result)
         }
-        BinaryOperator::ShiftRight | BinaryOperator::LogicalShiftRight => {
+        BinaryOperator::ShiftRight => {
             let mut result = left.dup();
             rsh_rat(&mut result, right, radix, precision)?;
             Ok(result)
+        }
+        BinaryOperator::LogicalShiftRight => {
+            // Convert to unsigned integer, shift, convert back
+            let val = left
+                .to_u64(radix, precision)
+                .map_err(|_| CalcError::Domain)?;
+            let masked = val & word_mask;
+            let shift = right
+                .to_u64(radix, precision)
+                .map_err(|_| CalcError::Domain)?;
+            let result = if shift >= 64 { 0 } else { masked >> shift };
+            Ok(Rational::from_u64(result))
         }
     }
 }

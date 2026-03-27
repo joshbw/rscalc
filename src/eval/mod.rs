@@ -37,8 +37,16 @@ fn eval_node(
         Expr::BinaryOp { op, left, right } => {
             let l = eval_node(left, state, radix, precision, constants)?;
             let r = eval_node(right, state, radix, precision, constants)?;
-            operators::eval_binary_op(*op, &l, &r, radix, precision, constants)
-                .map_err(|e| format!("{e}"))
+            operators::eval_binary_op(
+                *op,
+                &l,
+                &r,
+                radix,
+                precision,
+                constants,
+                state.settings.word_mask(),
+            )
+            .map_err(|e| format!("{e}"))
         }
         Expr::Factorial(inner) => {
             let mut val = eval_node(inner, state, radix, precision, constants)?;

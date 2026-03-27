@@ -1,4 +1,7 @@
 /// Calculation history: ordered list of (expression, result) pairs.
+/// Maximum number of history entries before old ones are dropped.
+const MAX_HISTORY: usize = 1000;
+
 /// A single history entry.
 #[derive(Debug, Clone)]
 pub struct HistoryEntry {
@@ -17,8 +20,11 @@ impl History {
         Self::default()
     }
 
-    /// Add a new entry to the history.
+    /// Add a new entry to the history, dropping the oldest if at capacity.
     pub fn push(&mut self, expression: String, result: String) {
+        if self.entries.len() >= MAX_HISTORY {
+            self.entries.remove(0);
+        }
         self.entries.push(HistoryEntry { expression, result });
     }
 
