@@ -65,7 +65,9 @@ fn eval_node(
 }
 
 /// Parse a number literal string into a Rational.
-fn parse_number(s: &str, default_radix: u32, precision: i32) -> Result<Rational, String> {
+/// Prefixed numbers (0x, 0o, 0b) are parsed in their respective base.
+/// Unprefixed numbers are always parsed as decimal (base 10).
+fn parse_number(s: &str, _default_radix: u32, precision: i32) -> Result<Rational, String> {
     // Handle prefixed literals
     if let Some(hex) = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
         return string_to_rat(false, hex, false, "0", 16, precision)
@@ -100,13 +102,13 @@ fn parse_number(s: &str, default_radix: u32, precision: i32) -> Result<Rational,
             .map_err(|e| format!("Invalid number '{s}': {e}"));
     }
 
-    // Plain number in the current radix
+    // Plain decimal number
     let (neg, digits) = if let Some(stripped) = s.strip_prefix('-') {
         (true, stripped)
     } else {
         (false, s)
     };
-    string_to_rat(neg, digits, false, "0", default_radix, precision)
+    string_to_rat(neg, digits, false, "0", 10, precision)
         .map_err(|e| format!("Invalid number '{s}': {e}"))
 }
 
